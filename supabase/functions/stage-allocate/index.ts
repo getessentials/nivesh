@@ -181,21 +181,31 @@ Deno.serve(async (req) => {
         });
         representedThemeKeys.add(pick.themeKey);
       }
-      // A theme whose ENTIRE top-2 lost the cross-sleeve one-per-index dedup (docs/03 §3.3) has no
-      // entry in finalPicks — its earmarked softmax share of the satellite sleeve must still be
-      // accounted for rather than silently vanish (docs/03 §4 step 5: every paisa is spent or
-      // reported as residual/carry). Its target share joins the remainder pool directly.
+      // Every sleeve's capital must end up either on a finalPicks row or in the remainder pool —
+      // never silently dropped (docs/03 §4 step 5: "every paisa is spent or reported as
+      // residual/carry"). Three independent ways a sleeve can end up with no representative pick:
+      // (a) no theme was selected at all (themeRankRows empty — total gate wipeout), (b) a
+      // selected theme's ENTIRE top-2 lost cross-sleeve dedup, (c) core/non-equity had no eligible
+      // ETF to begin with, or its one candidate lost dedup. All three route here.
       let unclaimedThemeSharePaise = 0n;
-      for (const t of themeRankRows) {
-        if (representedThemeKeys.has(t.theme_key)) continue;
-        const themeWeight = themeWeightByKey.get(t.theme_key) ?? 0;
-        unclaimedThemeSharePaise += allocPaiseForWeight(themeWeight, sleeves.satellitePaise);
+      if (themeRankRows.length === 0) {
+        unclaimedThemeSharePaise = sleeves.satellitePaise;
+      } else {
+        for (const t of themeRankRows) {
+          if (representedThemeKeys.has(t.theme_key)) continue;
+          const themeWeight = themeWeightByKey.get(t.theme_key) ?? 0;
+          unclaimedThemeSharePaise += allocPaiseForWeight(themeWeight, sleeves.satellitePaise);
+        }
       }
       const coreSurvivor = survivors.find((c) => c.role === 'core');
+      let unclaimedCorePaise = 0n;
       if (coreSurvivor) {
         finalPicks.push({ etfId: coreSurvivor.etfId, themeKey: 'broad_core', combinedWeightOfSleeve: 1, sleevePaise: sleeves.corePaise, sEtfFinal: coreSurvivor.sEtfFinal, terPct: coreSurvivor.terPct, mergedNonEquity: false });
+      } else {
+        unclaimedCorePaise = sleeves.corePaise; // no eligible core ETF, or its only candidate lost dedup
       }
       const nonEquitySurvivor = survivors.find((c) => c.role === 'non_equity');
+      let unclaimedNonEquityPaise = 0n;
       if (nonEquitySurvivor) {
         finalPicks.push({ etfId: nonEquitySurvivor.etfId, themeKey: nonEquityTheme, combinedWeightOfSleeve: 1, sleevePaise: sleeves.nonEquityPaise, sEtfFinal: nonEquitySurvivor.sEtfFinal, terPct: nonEquitySurvivor.terPct, mergedNonEquity: false });
       } else if (nonEquityIsMerged) {
@@ -206,7 +216,13 @@ Deno.serve(async (req) => {
           // Tracked as an ADDITIONAL sleeve contribution alongside the satellite one (see
           // targetAllocPaise computation below, which sums both sleeve contributions for a
           // merged pick rather than using a single combinedWeight*sleevePaise formula).
+        } else {
+          // The merged theme was selected but its ENTIRE top-2 lost dedup too — no pick anywhere
+          // to attach the non-equity sleeve to.
+          unclaimedNonEquityPaise = sleeves.nonEquityPaise;
         }
+      } else {
+        unclaimedNonEquityPaise = sleeves.nonEquityPaise; // no eligible non-equity ETF at all
       }
 
       const etfIdsForPricing = finalPicks.map((p) => p.etfId);
@@ -228,7 +244,7 @@ Deno.serve(async (req) => {
         targetWeightOfXSpendable.set(p.etfId, (targetWeightOfXSpendable.get(p.etfId) ?? 0) + weightOfX);
       }
 
-      let poolPaise = sleeves.flooringShortfallPaise + unclaimedThemeSharePaise;
+      let poolPaise = sleeves.flooringShortfallPaise + unclaimedThemeSharePaise + unclaimedCorePaise + unclaimedNonEquityPaise;
       const baseUnitsByEtf = new Map<number, number>();
       for (const p of finalPicks) {
         const price = priceByEtf.get(p.etfId);

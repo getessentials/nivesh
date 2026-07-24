@@ -7,3 +7,5 @@ supabase/.temp/
 supabase/tests/.pgdata/
 *.log
 .DS_Store
+.vercel
+.env*

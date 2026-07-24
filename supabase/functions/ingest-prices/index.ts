@@ -12,7 +12,7 @@ import { fetchWithRetry } from '../_shared/http.ts';
 import { errorResponse } from '../_shared/http-error.ts';
 import { unzipSync } from 'fflate';
 import {
-  parseYahooChart, parseNseBhavcopy, checkTimeSeriesRow, rupeesToPaise, isTradingDay,
+  parseYahooChart, parseNseBhavcopy, checkTimeSeriesRow, rupeesToPaise, paiseToRupees, isTradingDay,
   EtfPriceRowSchema, type EtfPriceRow, type PreviousObservation,
 } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -65,7 +65,9 @@ async function loadLatestPrices(
 
   const latest = new Map<number, PreviousObservation>();
   for (const row of data as Array<{ etf_id: number; d: string; close_paise: string }>) {
-    latest.set(row.etf_id, { date: row.d, value: Number(row.close_paise) });
+    // checkTimeSeriesRow always compares against fresh source values in decimal rupees
+    // (Yahoo/bhavcopy close) — a paise-scaled baseline here would falsely trip the jump gate.
+    latest.set(row.etf_id, { date: row.d, value: paiseToRupees(BigInt(row.close_paise)) });
   }
   return latest;
 }
@@ -199,7 +201,7 @@ Deno.serve(async (req) => {
             });
             if (!validated) { quarantined++; continue; }
             upsertRows.push(validated);
-            runningPrevious = { date: bar.date, value: Number(closePaise) };
+            runningPrevious = { date: bar.date, value: bar.close };
             // Updated incrementally, not just once after the loop: if a LATER bar in this same
             // self-heal run throws (e.g. BigInt() on a bad volume), the earlier bars already
             // pushed to upsertRows are still correctly persisted — latestByEtf must reflect

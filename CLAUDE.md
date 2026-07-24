@@ -130,3 +130,4 @@ attempts per stage) — full state machine in docs/10 §3; cron auth model in do
 - docs/09-security-and-access.md — RLS matrix, Edge Function auth (incl. cron), secrets, ingestion integrity
 - docs/10-operations-runbook.md — market calendar, cron catalog (UTC), pipeline driver, backups, alerting, free-tier limits
 - docs/11-deployment-checklist.md — everything left after build-order step 6: account setup, Supabase/Vercel one-time config, credential hand-off, post-deploy smoke test
+- docs/12-owner-guide.md — plain-language: how the pipeline works, what recurring manual tasks the owner has (metrics entry, TRI upload, holiday reseed), first-time walkthrough

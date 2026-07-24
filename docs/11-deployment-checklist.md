@@ -34,8 +34,11 @@ to hand off credentials safely).
   (never commit these, never put them in a migration file — docs/09 §3):
   ```sql
   select vault.create_secret('<the same value you set as the CRON_SECRET function secret below>', 'cron_secret');
-  alter database postgres set app.settings.project_url = 'https://<project-ref>.supabase.co';
+  select vault.create_secret('https://<project-ref>.supabase.co', 'project_url');
   ```
+  (Not `alter database ... set app.settings.project_url` — Supabase's hosted Postgres denies
+  custom database-level GUCs to every role, including the dashboard SQL editor's `postgres` role,
+  which is not real superuser there. Vault has no such restriction.)
 - [ ] `supabase secrets set CRON_SECRET=<value> ANTHROPIC_API_KEY=<value> EMAIL_API_KEY=<resend key> ALERT_EMAIL_TO=<owner email>`
   (`ALERT_EMAIL_FROM` optional — defaults to the Resend sandbox sender; `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` are auto-provided to Edge Functions by Supabase, no need to set them).

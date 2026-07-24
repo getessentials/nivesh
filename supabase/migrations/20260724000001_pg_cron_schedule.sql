@@ -6,7 +6,11 @@
 -- migration file, they must not enter git history, docs/09 §3):
 --
 --   1. select vault.create_secret('<the same value as the CRON_SECRET Edge Function secret>', 'cron_secret');
---   2. alter database postgres set app.settings.project_url = 'https://<your-project-ref>.supabase.co';
+--   2. select vault.create_secret('https://<your-project-ref>.supabase.co', 'project_url');
+--      (originally an `alter database ... set app.settings.project_url` GUC — reverted: Supabase's
+--      hosted Postgres does not grant even the dashboard SQL editor's `postgres` role real
+--      superuser, so setting a custom database-level GUC is permission-denied there regardless of
+--      role. Vault has no such restriction, so project_url now lives there too, same as cron_secret.)
 --   3. supabase secrets set CRON_SECRET=<value> EMAIL_API_KEY=<resend api key> ALERT_EMAIL_TO=<owner email>
 --      (ALERT_EMAIL_FROM is optional — defaults to Resend's sandbox sender, see health-check/index.ts)
 --
@@ -16,9 +20,9 @@
 create extension if not exists pg_cron with schema extensions;
 create extension if not exists pg_net with schema extensions;
 
--- Looks up the cron secret from Vault and the project URL from the GUC set in step 2 above, then
--- fires the Edge Function. security definer so it can read vault.decrypted_secrets (normally
--- restricted) on behalf of whatever role pg_cron runs the job as; never exposed to client roles.
+-- Looks up the cron secret AND the project URL from Vault, then fires the Edge Function.
+-- security definer so it can read vault.decrypted_secrets (normally restricted) on behalf of
+-- whatever role pg_cron runs the job as; never exposed to client roles.
 --
 -- KNOWN GAP (ops review, build-order step 6): if this function raises — e.g. the one-time setup
 -- above wasn't done, or was done wrong — that failure is visible ONLY in cron.job_run_details,
@@ -41,9 +45,9 @@ begin
     raise exception 'cron_invoke_edge_function(%): vault secret "cron_secret" not found — see the one-time setup note at the top of this migration', function_name;
   end if;
 
-  v_url := current_setting('app.settings.project_url', true);
+  select decrypted_secret into v_url from vault.decrypted_secrets where name = 'project_url';
   if v_url is null or v_url = '' then
-    raise exception 'cron_invoke_edge_function(%): app.settings.project_url is not set — see the one-time setup note at the top of this migration', function_name;
+    raise exception 'cron_invoke_edge_function(%): vault secret "project_url" not found — see the one-time setup note at the top of this migration', function_name;
   end if;
 
   -- This is pg_net's own wait-for-response timeout, not the invoked Edge Function's execution

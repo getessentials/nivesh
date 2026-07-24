@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useGetProfileQuery, useUpsertProfileMutation, useGetMonthlyRunsQuery, useGetMetricsReviewQueueQuery, useGetIngestQuarantineQuery } from '@/store/api';
+import { useGetProfileQuery, useUpsertProfileMutation, useGetMonthlyRunsQuery, useGetIngestQuarantineQuery } from '@/store/api';
+import { MetricsReviewQueueCard } from '@/components/settings/MetricsReviewQueueCard';
+import { TriUploadCard } from '@/components/settings/TriUploadCard';
 import { invokeFunction } from '@/lib/supabase';
 import { formatPaise } from '@/lib/money';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,7 +32,6 @@ export default function SettingsPage() {
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery(userId);
   const [upsertProfile, { isLoading: saving }] = useUpsertProfileMutation();
   const { data: runs } = useGetMonthlyRunsQuery(userId);
-  const { data: reviewQueue } = useGetMetricsReviewQueueQuery(undefined, { skip: !isAdmin });
   const { data: quarantine } = useGetIngestQuarantineQuery(undefined, { skip: !isAdmin });
 
   const [defaultAmountRupees, setDefaultAmountRupees] = useState('');
@@ -57,10 +58,14 @@ export default function SettingsPage() {
   async function handleForceResearch() {
     setForcingResearch(true);
     try {
-      await invokeFunction('admin-force-research', {});
-      toast.success('Force re-research requested.');
-    } catch {
-      toast.error('admin-force-research is not deployed yet.');
+      const result = await invokeFunction<{ ok?: boolean; error?: string; candidateCount?: number }>('admin-force-research', {});
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Force re-research done — ${result.candidateCount ?? 0} candidates.`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'admin-force-research request failed.');
     } finally {
       setForcingResearch(false);
     }
@@ -141,16 +146,14 @@ export default function SettingsPage() {
               </Button>
             </div>
             <div>
-              <p className="text-sm font-medium mb-1">Metrics review queue ({reviewQueue?.length ?? 0} pending)</p>
-              <p className="text-xs text-muted-foreground">Submission form ships with the admin-submit-metrics Edge Function (not yet deployed).</p>
-            </div>
-            <div>
               <p className="text-sm font-medium mb-1">Ingest quarantine ({quarantine?.length ?? 0} pending)</p>
               <p className="text-xs text-muted-foreground">Resolution actions ship with the admin-resolve-quarantine Edge Function (not yet deployed).</p>
             </div>
           </CardContent>
         </Card>
       )}
+      {isAdmin && <MetricsReviewQueueCard />}
+      {isAdmin && <TriUploadCard />}
     </div>
   );
 }

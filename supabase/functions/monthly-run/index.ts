@@ -12,6 +12,7 @@ import { userFacingErrorResponse, HttpError } from '../_shared/http-error.ts';
 import { chainStage, STAGE_FOR_STATUS, type PipelineStatus } from '../_shared/pipeline.ts';
 import { loadLatestRunForMonth, residualCarryInPaise, sumDeployedAgainstRunPaise, TERMINAL_STATUSES } from '../_shared/run-repo.ts';
 import { firstTradingDayOfMonth } from '../_shared/shared-lib.ts';
+import { handlePreflight, withCors } from '../_shared/cors.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -150,6 +151,9 @@ async function handleUserRun(
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   try {
     const hasCronSecret = req.headers.has('x-cron-secret');
     const supabase = createServiceClient();
@@ -161,7 +165,7 @@ Deno.serve(async (req) => {
       const runMonth = `${yyyyMM}-01`;
       const today = new Date(Date.now() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
       if (today !== firstTradingDayOfMonth(yyyyMM, holidays)) {
-        return jsonResponse({ ok: true, note: 'no-op: not the first trading day of the month' });
+        return withCors(jsonResponse({ ok: true, note: 'no-op: not the first trading day of the month' }));
       }
 
       const { data: profileRows, error } = await supabase.from('profiles').select('user_id');
@@ -173,7 +177,7 @@ Deno.serve(async (req) => {
         const body = await res.json();
         if (body.created) created++; else skipped++;
       }
-      return jsonResponse({ ok: true, created, skipped });
+      return withCors(jsonResponse({ ok: true, created, skipped }));
     }
 
     // User-initiated "Run now".
@@ -183,13 +187,14 @@ Deno.serve(async (req) => {
     const amountPaise = payload.amountPaise !== undefined ? BigInt(payload.amountPaise) : undefined;
     if (amountPaise !== undefined && amountPaise < 0n) throw new HttpError(400, 'amountPaise must not be negative');
 
-    return await handleUserRun(supabase, userId, runMonth, {
+    const res = await handleUserRun(supabase, userId, runMonth, {
       amountPaise,
       confirmSupersede: payload.confirmSupersede === true,
       enforceRateLimit: true,
       isCron: false,
     });
+    return withCors(res);
   } catch (err) {
-    return userFacingErrorResponse(err);
+    return withCors(userFacingErrorResponse(err));
   }
 });

@@ -55,3 +55,23 @@ export const EtfMetricsComputedSchema = z.object({
   premium_discount_30d: z.number().nullable(),
 });
 export type EtfMetricsComputed = z.infer<typeof EtfMetricsComputedSchema>;
+
+/**
+ * The MANUAL_ONLY_FIELDS (docs/02 §4) an owner submits via admin-submit-metrics — no clean free
+ * API exists for these. Bounds are sanity ceilings to catch fat-finger typos (e.g. "15" instead
+ * of "1.5"), deliberately looser than the eligibility gate thresholds in packages/engine/gates.ts
+ * (TER<=1%, TE<=2%) — a value can be sane-but-ineligible and still needs to be accepted here so
+ * the plan can honestly report WHY an ETF was excluded, rather than the submission being rejected
+ * before the gate ever sees it.
+ */
+export const EtfMetricsManualSchema = z.object({
+  etf_id: z.number().int().positive(),
+  as_of: isoDate,
+  aum_cr: z.number().positive().max(1_000_000),
+  ter_pct: z.number().min(0).max(5),
+  tracking_error_1y: z.number().min(0).max(20),
+  tracking_diff_1y: z.number().min(-20).max(20),
+  tracking_diff_3y: z.number().min(-20).max(20).nullable().optional(),
+  tracking_diff_5y: z.number().min(-20).max(20).nullable().optional(),
+});
+export type EtfMetricsManual = z.infer<typeof EtfMetricsManualSchema>;

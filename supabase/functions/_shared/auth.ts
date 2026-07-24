@@ -4,7 +4,7 @@
  * time so response-time doesn't leak how much of the secret matched (docs/09 §2.2 fix).
  */
 import { createClient } from '@supabase/supabase-js';
-import { requireEnv } from './env.ts';
+import { requireEnv, optionalEnv } from './env.ts';
 import { HttpError } from './http-error.ts';
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -43,4 +43,17 @@ export async function verifyUserJwt(req: Request): Promise<{ userId: string }> {
   const { data, error } = await client.auth.getUser(token);
   if (error || !data?.user) throw new HttpError(401, 'invalid or expired session token');
   return { userId: data.user.id };
+}
+
+/**
+ * Owner-admin function auth (docs/09 §2.1): a valid user JWT AND `sub` in the ADMIN_USER_IDS
+ * allowlist. Missing/unset ADMIN_USER_IDS fails closed (empty allowlist, nobody is admin) rather
+ * than throwing — an unconfigured secret must never accidentally open an admin function to every
+ * authenticated user.
+ */
+export async function verifyAdminJwt(req: Request): Promise<{ userId: string }> {
+  const { userId } = await verifyUserJwt(req);
+  const allowlist = (optionalEnv('ADMIN_USER_IDS') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (!allowlist.includes(userId)) throw new HttpError(403, 'not an admin user');
+  return { userId };
 }

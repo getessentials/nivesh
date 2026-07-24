@@ -15,7 +15,7 @@ import { writeQuarantine } from '../_shared/quarantine.ts';
 import { fetchWithRetry } from '../_shared/http.ts';
 import { errorResponse } from '../_shared/http-error.ts';
 import {
-  parseAmfiNavAll, parseFlexibleDate, checkTimeSeriesRow, rupeesToPaise,
+  parseAmfiNavAll, parseFlexibleDate, checkTimeSeriesRow, rupeesToPaise, paiseToRupees,
   EtfNavRowSchema, type PreviousObservation,
 } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -57,7 +57,9 @@ async function loadLatestNavs(
 
   const latest = new Map<number, PreviousObservation>();
   for (const row of data as Array<{ etf_id: number; d: string; nav_paise: string }>) {
-    latest.set(row.etf_id, { date: row.d, value: Number(row.nav_paise) });
+    // checkTimeSeriesRow always compares against fresh source values in decimal rupees
+    // (AMFI/mfapi NAV) — a paise-scaled baseline here would falsely trip the jump gate.
+    latest.set(row.etf_id, { date: row.d, value: paiseToRupees(BigInt(row.nav_paise)) });
   }
   return latest;
 }
@@ -139,7 +141,7 @@ Deno.serve(async (req) => {
         });
         if (!validated) { quarantined++; continue; }
         upsertRows.push(validated);
-        latestByEtf.set(etf.id, { date: obs.date, value: Number(navPaise) });
+        latestByEtf.set(etf.id, { date: obs.date, value: obs.nav });
       }
 
       if (upsertRows.length > 0) {
