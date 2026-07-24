@@ -1,0 +1,702 @@
+{
+  "verified_at": "2026-07-23",
+  "etfs": [
+    {
+      "theme_key": "broad_core",
+      "name": "Nippon India ETF Nifty 50 BeES",
+      "amfi_scheme_code": "140084",
+      "isin": "INF204KB14I2",
+      "yahoo_symbol": "NIFTYBEES.NS",
+      "underlying_index": "NIFTY 50",
+      "asset_class": "equity",
+      "listed_on": "2009-01-01",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Nippon India ETF Nifty 50 BeES",
+        "yahoo_price": 271.98,
+        "nav": 273.0943,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed_on is Yahoo data start; actual NSE listing 2002-01 (legacy AMFI code renames truncate mfapi history)"
+    },
+    {
+      "theme_key": "broad_core",
+      "name": "HDFC NIFTY 50 ETF - Growth Plan",
+      "amfi_scheme_code": "135853",
+      "isin": "INF179KC1965",
+      "yahoo_symbol": "HDFCNIFTY.NS",
+      "underlying_index": "NIFTY 50",
+      "asset_class": "equity",
+      "listed_on": "2015-12-09",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "HDFCAMC - HDFCNIFTY",
+        "yahoo_price": 268.89,
+        "nav": 270.1441,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "broad_core",
+      "name": "ICICI Prudential Nifty 50 ETF",
+      "amfi_scheme_code": "121366",
+      "isin": "INF109K012R6",
+      "yahoo_symbol": "NIFTYIETF.NS",
+      "underlying_index": "NIFTY 50",
+      "asset_class": "equity",
+      "listed_on": "2013-03-21",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "ICICI Prudential Nifty 50 ETF",
+        "yahoo_price": 270.52,
+        "nav": 271.6976,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "broad_core",
+      "name": "SBI Nifty 50 ETF",
+      "amfi_scheme_code": "135106",
+      "isin": "INF200KA1FS1",
+      "yahoo_symbol": "SETFNIF50.NS",
+      "underlying_index": "NIFTY 50",
+      "asset_class": "equity",
+      "listed_on": "2015-07-23",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "SBI Nifty 50 ETF",
+        "yahoo_price": 257.17,
+        "nav": 258.0948,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "defence",
+      "name": "Motilal Oswal Nifty India Defence ETF",
+      "amfi_scheme_code": "152846",
+      "isin": "INF247L01DJ0",
+      "yahoo_symbol": "MODEFENCE.NS",
+      "underlying_index": "NIFTY INDIA DEFENCE",
+      "asset_class": "equity",
+      "listed_on": "2024-08-26",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Motilal Oswal Nifty India Defence ETF",
+        "yahoo_price": 102.86,
+        "nav": 103.4273,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "manufacturing",
+      "name": "Mirae Asset Nifty India Manufacturing ETF",
+      "amfi_scheme_code": "149786",
+      "isin": "INF769K01IB1",
+      "yahoo_symbol": "MAKEINDIA.NS",
+      "underlying_index": "NIFTY INDIA MANUFACTURING",
+      "asset_class": "equity",
+      "listed_on": "2022-01-28",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "MIRAEAMC - MAMFGETF",
+        "yahoo_price": 162.06,
+        "nav": 162.6527,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "manufacturing",
+      "name": "Motilal Oswal Nifty India Manufacturing ETF",
+      "amfi_scheme_code": "153572",
+      "isin": "INF247L01FK3",
+      "yahoo_symbol": "MOMGF.NS",
+      "underlying_index": "NIFTY INDIA MANUFACTURING",
+      "asset_class": "equity",
+      "listed_on": "2025-05-28",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Motilal Oswal Mutual Fund - Motilal Oswal Nifty India Manufacturing ETF",
+        "yahoo_price": 159.48,
+        "nav": 159.5472,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "manufacturing",
+      "name": "Nippon India Nifty India Manufacturing ETF",
+      "amfi_scheme_code": "153810",
+      "isin": "INF204KC1GH6",
+      "yahoo_symbol": "MANUFGBEES.NS",
+      "underlying_index": "NIFTY INDIA MANUFACTURING",
+      "asset_class": "equity",
+      "listed_on": "2025-08-28",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Nippon Life India Asset Management Limited - India Nifty India Manufacturing ETF",
+        "yahoo_price": 160.14,
+        "nav": 160.5384,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed <12 months as of 2026-07-23; will fail gate G2 until 2026-08-28"
+    },
+    {
+      "theme_key": "infrastructure",
+      "name": "ICICI Prudential Nifty Infrastructure ETF",
+      "amfi_scheme_code": "150526",
+      "isin": "INF109KC16E5",
+      "yahoo_symbol": "INFRAIETF.NS",
+      "underlying_index": "NIFTY INFRASTRUCTURE",
+      "asset_class": "equity",
+      "listed_on": "2022-08-18",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "ICICIPRAMC - ICICIINFRA",
+        "yahoo_price": 95.59,
+        "nav": 96.3101,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "infrastructure",
+      "name": "Motilal Oswal BSE India Infrastructure ETF",
+      "amfi_scheme_code": "153564",
+      "isin": "INF247L01FL1",
+      "yahoo_symbol": "MOINFRA.NS",
+      "underlying_index": "BSE INDIA INFRASTRUCTURE",
+      "asset_class": "equity",
+      "listed_on": "2025-05-21",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Motilal Oswal Asset Management Co. Ltd - Motilal Oswal BSE India Infrastructure ETF",
+        "yahoo_price": 60.47,
+        "nav": 61.1207,
+        "nav_date": "2026-07-22"
+      },
+      "note": "underlying is a BSE index (BSE India Infrastructure), not NIFTY Infrastructure — TRI source differs (BSE, not niftyindices)"
+    },
+    {
+      "theme_key": "psu_value",
+      "name": "CPSE ETF",
+      "amfi_scheme_code": "140107",
+      "isin": "INF457M01133",
+      "yahoo_symbol": "CPSEETF.NS",
+      "underlying_index": "NIFTY CPSE",
+      "asset_class": "equity",
+      "listed_on": "2014-03-28",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "CPSE ETF",
+        "yahoo_price": 96.75,
+        "nav": 96.9507,
+        "nav_date": "2026-07-22"
+      },
+      "note": "Yahoo first trade 2014-03-28 ~ NFO; NSE listing 2014-04; mfapi history truncated by code rename"
+    },
+    {
+      "theme_key": "psu_value",
+      "name": "BHARAT 22 ETF",
+      "amfi_scheme_code": "141957",
+      "isin": "INF109KB15Y7",
+      "yahoo_symbol": "ICICIB22.NS",
+      "underlying_index": "BSE BHARAT 22",
+      "asset_class": "equity",
+      "listed_on": "2018-07-03",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "BHARAT 22 ETF",
+        "yahoo_price": 115.36,
+        "nav": 115.9004,
+        "nav_date": "2026-07-22"
+      },
+      "note": "underlying is BSE Bharat 22 Index (formerly S&P BSE Bharat 22); actual NSE listing 2017-11 — both sources are data-start proxies"
+    },
+    {
+      "theme_key": "psu_value",
+      "name": "Nippon India ETF Nifty PSU Bank BeES",
+      "amfi_scheme_code": "140089",
+      "isin": "INF204KB16I7",
+      "yahoo_symbol": "PSUBNKBEES.NS",
+      "underlying_index": "NIFTY PSU BANK",
+      "asset_class": "equity",
+      "listed_on": "2009-01-01",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Nippon India ETF Nifty PSU Bank BeES",
+        "yahoo_price": 92.88,
+        "nav": 93.7008,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed_on is Yahoo data start; actual listing 2007-10 (legacy code renames truncate mfapi history)"
+    },
+    {
+      "theme_key": "psu_value",
+      "name": "Kotak Nifty PSU Bank ETF",
+      "amfi_scheme_code": "106929",
+      "isin": "INF174KA1A86",
+      "yahoo_symbol": "PSUBANK.NS",
+      "underlying_index": "NIFTY PSU BANK",
+      "asset_class": "equity",
+      "listed_on": "2007-11-13",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Kotak Nifty PSU Bank ETF",
+        "yahoo_price": 83,
+        "nav": 83.9722,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "it_digital",
+      "name": "Aditya Birla Sun Life Nifty IT ETF",
+      "amfi_scheme_code": "149293",
+      "isin": "INF209KB11D8",
+      "yahoo_symbol": "TECH.NS",
+      "underlying_index": "NIFTY IT",
+      "asset_class": "equity",
+      "listed_on": "2021-11-03",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Aditya Birla Sun Life Nifty IT ETF",
+        "yahoo_price": 31.2,
+        "nav": 31.2718,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "it_digital",
+      "name": "Axis IT ETF",
+      "amfi_scheme_code": "148799",
+      "isin": "INF846K01Y96",
+      "yahoo_symbol": "AXISTECETF.NS",
+      "underlying_index": "NIFTY IT",
+      "asset_class": "equity",
+      "listed_on": "2021-03-31",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Axis NIFTY IT ETF",
+        "yahoo_price": 296.77,
+        "nav": 314.6971,
+        "nav_date": "2026-07-22"
+      },
+      "note": "Yahoo firstTradeDate is garbage (future date) for this ticker; mfapi first NAV used"
+    },
+    {
+      "theme_key": "it_digital",
+      "name": "DSP Nifty IT ETF",
+      "amfi_scheme_code": "151820",
+      "isin": "INF740KA1SX1",
+      "yahoo_symbol": "ITADD.NS",
+      "underlying_index": "NIFTY IT",
+      "asset_class": "equity",
+      "listed_on": "2023-07-07",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "DSPAMC - DSPIT",
+        "yahoo_price": 30.21,
+        "nav": 30.292,
+        "nav_date": "2026-07-22"
+      },
+      "note": "NSE website lists symbol as ITETFADD; Yahoo serves it as ITADD.NS (ITETFADD.NS is 404 on Yahoo)"
+    },
+    {
+      "theme_key": "gold",
+      "name": "Nippon India ETF Gold BeES",
+      "amfi_scheme_code": "140088",
+      "isin": "INF204KB17I5",
+      "yahoo_symbol": "GOLDBEES.NS",
+      "underlying_index": "DOMESTIC GOLD",
+      "asset_class": "gold",
+      "listed_on": "2009-01-01",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Nippon India ETF Gold BeES",
+        "yahoo_price": 118.69,
+        "nav": 119.1131,
+        "nav_date": "2026-07-22"
+      },
+      "proxy_pick": true,
+      "proxy_pick_source": "Business Standard Jan-2026: AUM ~Rs 59,007 cr, India's largest gold ETF",
+      "note": "listed_on is Yahoo data start; actual listing 2007-03; beware legacy AMFI codes 105085/115744 — current is 140088"
+    },
+    {
+      "theme_key": "gold",
+      "name": "Axis Gold ETF",
+      "amfi_scheme_code": "113434",
+      "isin": "INF846K01W80",
+      "yahoo_symbol": "AXISGOLD.NS",
+      "underlying_index": "DOMESTIC GOLD",
+      "asset_class": "gold",
+      "listed_on": "2010-11-16",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Axis Gold ETF",
+        "yahoo_price": 118.82,
+        "nav": 120.0319,
+        "nav_date": "2026-07-22"
+      },
+      "note": "Yahoo firstTradeDate is garbage (future date) for this ticker; mfapi first NAV used"
+    },
+    {
+      "theme_key": "gold",
+      "name": "Aditya Birla Sun Life Gold ETF",
+      "amfi_scheme_code": "115127",
+      "isin": "INF209KB18D3",
+      "yahoo_symbol": "BSLGOLDETF.NS",
+      "underlying_index": "DOMESTIC GOLD",
+      "asset_class": "gold",
+      "listed_on": "2011-05-16",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Aditya Birla Sun Life Gold ETF",
+        "yahoo_price": 126.43,
+        "nav": 126.6761,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "silver",
+      "name": "Aditya Birla Sun Life Silver ETF",
+      "amfi_scheme_code": "149779",
+      "isin": "INF209KB19F6",
+      "yahoo_symbol": "SILVER.NS",
+      "underlying_index": "DOMESTIC SILVER",
+      "asset_class": "silver",
+      "listed_on": "2022-01-31",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Aditya Birla Sun Life Silver ETF",
+        "yahoo_price": 220.64,
+        "nav": 222.9613,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "silver",
+      "name": "Nippon India Silver ETF",
+      "amfi_scheme_code": "149758",
+      "isin": "INF204KC1402",
+      "yahoo_symbol": "SILVERBEES.NS",
+      "underlying_index": "DOMESTIC SILVER",
+      "asset_class": "silver",
+      "listed_on": "2022-02-04",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Nippon India Silver ETF",
+        "yahoo_price": 211,
+        "nav": 213.583,
+        "nav_date": "2026-07-22"
+      },
+      "proxy_pick": true,
+      "proxy_pick_source": "Tickertape 2026-07-22: AUM Rs 30,011.65 cr — largest silver ETF in India"
+    },
+    {
+      "theme_key": "consumption",
+      "name": "Axis NIFTY India Consumption ETF",
+      "amfi_scheme_code": "149156",
+      "isin": "INF846K016C7",
+      "yahoo_symbol": "AXISCETF.NS",
+      "underlying_index": "NIFTY INDIA CONSUMPTION",
+      "asset_class": "equity",
+      "listed_on": "2021-09-23",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Axis NIFTY India Consumption ETF",
+        "yahoo_price": 121.12,
+        "nav": 121.288,
+        "nav_date": "2026-07-22"
+      },
+      "note": "Yahoo firstTradeDate is garbage (future date) for this ticker; mfapi first NAV used"
+    },
+    {
+      "theme_key": "consumption",
+      "name": "ICICI Prudential Nifty India Consumption ETF",
+      "amfi_scheme_code": "149285",
+      "isin": "INF109KC1V42",
+      "yahoo_symbol": "CONSUMIETF.NS",
+      "underlying_index": "NIFTY INDIA CONSUMPTION",
+      "asset_class": "equity",
+      "listed_on": "2021-10-29",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "ICICI Prudential Nifty India Consumption ETF",
+        "yahoo_price": 121.85,
+        "nav": 122.079,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "consumption",
+      "name": "Kotak Nifty India Consumption ETF",
+      "amfi_scheme_code": "150492",
+      "isin": "INF174KA1ZF8",
+      "yahoo_symbol": "CONS.NS",
+      "underlying_index": "NIFTY INDIA CONSUMPTION",
+      "asset_class": "equity",
+      "listed_on": "2022-07-28",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Kotak NIFTY India Consumption ETF",
+        "yahoo_price": 12.13,
+        "nav": 12.1237,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "metals_commodities",
+      "name": "Groww Nifty Metal ETF",
+      "amfi_scheme_code": "154034",
+      "isin": "INF666M01NI0",
+      "yahoo_symbol": "GROWWMETAL.NS",
+      "underlying_index": "NIFTY METAL",
+      "asset_class": "equity",
+      "listed_on": "2025-12-22",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Groww Nifty Metal ETF",
+        "yahoo_price": 11.86,
+        "nav": 11.9785,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed <12 months as of 2026-07-23; will fail gate G2 until 2026-12-22"
+    },
+    {
+      "theme_key": "metals_commodities",
+      "name": "ICICI Prudential Nifty Metal ETF",
+      "amfi_scheme_code": "152769",
+      "isin": "INF109KC19W1",
+      "yahoo_symbol": "METALIETF.NS",
+      "underlying_index": "NIFTY METAL",
+      "asset_class": "equity",
+      "listed_on": "2024-08-16",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "ICICI Prudential Nifty Metal ETF",
+        "yahoo_price": 12.57,
+        "nav": 12.6445,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "metals_commodities",
+      "name": "Mirae Asset Nifty Metal ETF",
+      "amfi_scheme_code": "152924",
+      "isin": "INF769K01LY7",
+      "yahoo_symbol": "METAL.NS",
+      "underlying_index": "NIFTY METAL",
+      "asset_class": "equity",
+      "listed_on": "2024-10-04",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Mirae Asset Nifty Metal ETF",
+        "yahoo_price": 12.58,
+        "nav": 12.6891,
+        "nav_date": "2026-07-22"
+      }
+    },
+    {
+      "theme_key": "energy",
+      "name": "Mirae Asset Nifty Energy ETF",
+      "amfi_scheme_code": "153945",
+      "isin": "INF769K01PR2",
+      "yahoo_symbol": "ENERGY.NS",
+      "underlying_index": "NIFTY ENERGY",
+      "asset_class": "equity",
+      "listed_on": "2025-11-10",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Mirae Asset Nifty Energy ETF",
+        "yahoo_price": 39.21,
+        "nav": 39.5936,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed <12 months as of 2026-07-23; will fail gate G2 until 2026-11-10"
+    },
+    {
+      "theme_key": "energy",
+      "name": "Motilal Oswal Nifty Energy ETF",
+      "amfi_scheme_code": "153931",
+      "isin": "INF247L01GH7",
+      "yahoo_symbol": "MOENERGY.NS",
+      "underlying_index": "NIFTY ENERGY",
+      "asset_class": "equity",
+      "listed_on": "2025-10-16",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Motilal Oswal Nifty Energy ETF",
+        "yahoo_price": 39.08,
+        "nav": 39.525,
+        "nav_date": "2026-07-22"
+      },
+      "note": "listed <12 months as of 2026-07-23; will fail gate G2 until 2026-10-16"
+    },
+    {
+      "theme_key": "ai_global_tech",
+      "name": "Motilal Oswal Nasdaq 100 ETF (MOFN100)",
+      "amfi_scheme_code": "114984",
+      "isin": "INF247L01AP3",
+      "yahoo_symbol": "MON100.NS",
+      "underlying_index": "NASDAQ 100",
+      "asset_class": "intl",
+      "listed_on": "2011-03-29",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Motilal Oswal NASDAQ 100 ETF",
+        "yahoo_price": 328.84,
+        "nav": 273.4631,
+        "nav_date": "2026-07-22"
+      },
+      "proxy_pick": true,
+      "proxy_pick_source": "only in-universe NASDAQ 100 listed ETF; nav_proxy series per docs/03 SS6",
+      "note": "price 328.84 vs NAV 273.46 = +20.3% premium (RBI limit / creation halt) — gate G6 blocks buys, as documented in docs/02 SS6"
+    },
+    {
+      "theme_key": "debt_liquid",
+      "name": "Zerodha Nifty 1D Rate Liquid ETF - Growth Option",
+      "amfi_scheme_code": "152327",
+      "isin": "INF0R8F01034",
+      "yahoo_symbol": "LIQUIDCASE.NS",
+      "underlying_index": "NIFTY 1D RATE",
+      "asset_class": "debt",
+      "listed_on": "2024-01-17",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "Zerodha Nifty 1D Rate Liquid ETF",
+        "yahoo_price": 115.13,
+        "nav": 115.113,
+        "nav_date": "2026-07-22"
+      },
+      "proxy_pick": true,
+      "proxy_pick_source": "Tickertape 2026-07-21: AUM Rs 10,117.74 cr — largest growth-NAV liquid ETF",
+      "note": "growth NAV confirmed (115.11, rising daily; not pinned at 1000)"
+    },
+    {
+      "theme_key": "debt_liquid",
+      "name": "HDFC NIFTY 1D RATE LIQUID ETF GROWTH",
+      "amfi_scheme_code": "153403",
+      "isin": "INF179KC1JG3",
+      "yahoo_symbol": "HDFCLIQUID.NS",
+      "underlying_index": "NIFTY 1D RATE",
+      "asset_class": "debt",
+      "listed_on": "2023-08-31",
+      "listed_on_source": "yahoo_first_trade",
+      "verification": {
+        "yahoo_longname": "HDFC Nifty 1D Rate Liquid ETF - Growth",
+        "yahoo_price": 1070.48,
+        "nav": 1070.3469,
+        "nav_date": "2026-07-22"
+      },
+      "note": "growth NAV confirmed (1070.35, not pinned); Yahoo first trade 2023-08-31 (original listing) vs mfapi growth-option NAV series starting 2025-03-02 — growth-scheme NAV history is short"
+    },
+    {
+      "theme_key": "debt_liquid",
+      "name": "Nippon India Nifty 1D Rate Liquid ETF-Growth",
+      "amfi_scheme_code": "153725",
+      "isin": "INF204KC1FU1",
+      "yahoo_symbol": "LIQGRWBEES.NS",
+      "underlying_index": "NIFTY 1D RATE",
+      "asset_class": "debt",
+      "listed_on": "2025-07-24",
+      "listed_on_source": "mfapi_first_nav",
+      "verification": {
+        "yahoo_longname": "Nippon Life India Asset Management Limited - Nippon India Nifty 1Day Rate LQD Growth ETF",
+        "yahoo_price": 1048.66,
+        "nav": 1048.5347,
+        "nav_date": "2026-07-22"
+      },
+      "note": "growth NAV confirmed (1048.53, not pinned); distinct from LIQUIDBEES (140086, daily-IDCW, pinned Rs 1000, unusable as benchmark proxy); listed <12 months, fails G2 until 2026-07-24"
+    }
+  ],
+  "nse_holidays_2026": [
+    {
+      "d": "2026-01-15",
+      "label": "Municipal Corporation Election - Maharashtra"
+    },
+    {
+      "d": "2026-01-26",
+      "label": "Republic Day"
+    },
+    {
+      "d": "2026-02-15",
+      "label": "Mahashivratri"
+    },
+    {
+      "d": "2026-03-03",
+      "label": "Holi"
+    },
+    {
+      "d": "2026-03-21",
+      "label": "Id-Ul-Fitr (Ramadan Eid)"
+    },
+    {
+      "d": "2026-03-26",
+      "label": "Shri Ram Navami"
+    },
+    {
+      "d": "2026-03-31",
+      "label": "Shri Mahavir Jayanti"
+    },
+    {
+      "d": "2026-04-03",
+      "label": "Good Friday"
+    },
+    {
+      "d": "2026-04-14",
+      "label": "Dr. Baba Saheb Ambedkar Jayanti"
+    },
+    {
+      "d": "2026-05-01",
+      "label": "Maharashtra Day"
+    },
+    {
+      "d": "2026-05-28",
+      "label": "Bakri Id"
+    },
+    {
+      "d": "2026-06-26",
+      "label": "Muharram"
+    },
+    {
+      "d": "2026-08-15",
+      "label": "Independence Day"
+    },
+    {
+      "d": "2026-09-14",
+      "label": "Ganesh Chaturthi"
+    },
+    {
+      "d": "2026-10-02",
+      "label": "Mahatma Gandhi Jayanti"
+    },
+    {
+      "d": "2026-10-20",
+      "label": "Dussehra"
+    },
+    {
+      "d": "2026-11-08",
+      "label": "Diwali Laxmi Pujan*"
+    },
+    {
+      "d": "2026-11-10",
+      "label": "Diwali-Balipratipada"
+    },
+    {
+      "d": "2026-11-24",
+      "label": "Prakash Gurpurb Sri Guru Nanak Dev"
+    },
+    {
+      "d": "2026-12-25",
+      "label": "Christmas"
+    }
+  ],
+  "notes": [
+    "All AMFI scheme codes, names, ISINs and NAVs verified against AMFI NAVAll.txt downloaded 2026-07-23 (302-redirects to portal.amfiindia.com; NAV date 2026-07-22). All 34 codes matched exactly.",
+    "All yahoo_symbol values verified live against query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}.NS on 2026-07-23; longName/shortName and regularMarketPrice recorded in verification. Prices are intraday 2026-07-23 and closely match 2026-07-22 NAVs (except MON100, see its note).",
+    "listed_on = earlier of Yahoo meta.firstTradeDate and mfapi.in first NAV date; both are data-availability proxies, not official listing dates. Yahoo firstTradeDate returns garbage future dates for some NSE tickers (AXISTECETF, AXISGOLD, AXISCETF) — mfapi used there. For pre-2009 Nippon BeES schemes and schemes with legacy AMFI code renames, both proxies postdate the true listing (noted per ETF); gate G2 (>=12 months) is unaffected.",
+    "mfapi.in cross-check passed for all 34 codes (scheme names match AMFI; latest NAVs identical to NAVAll).",
+    "debt_liquid cohort deliberately contains only growth-NAV liquid ETFs (docs/03 SS6): LIQUIDCASE, HDFCLIQUID, LIQGRWBEES all show rising daily NAV. Daily-IDCW Rs-1000-pinned ETFs (LIQUIDBEES 140086, ICICI LIQUIDIETF trading at 999.99, DSP 142589, SBI 152168, Mirae 151908, ABSL 151533) were checked and excluded. ICICI Prudential BSE Liquid Rate ETF - Growth (153378) exists in AMFI but no distinct NSE/Yahoo symbol for the growth option could be verified — VERIFY-AT-SEED if a 4th cohort member is wanted.",
+    "MON100 trades at +20.3% premium to NAV (328.84 vs 273.46) — confirms docs/02 SS6 expected steady state for RBI-capped intl ETFs; G6 blocks buys.",
+    "proxy_pick per theme (nav_proxy benchmark series, docs/03 SS6): gold=GOLDBEES (~Rs 59,007 cr, Business Standard Jan-2026), silver=SILVERBEES (Rs 30,011.65 cr, Tickertape 2026-07-22), debt_liquid=LIQUIDCASE (Rs 10,117.74 cr, Tickertape 2026-07-21), ai_global_tech=MON100 (only candidate). AUM figures are best-effort press/aggregator numbers — formal etf_metrics AUM still VERIFY-AT-SEED via refresh-metrics.",
+    "NSE holidays 2026 fetched 2026-07-23 from https://www.nseindia.com/api/holiday-master?type=trading (CM segment; cookie-primed request). 2026-11-08 'Diwali Laxmi Pujan*' carries NSE's asterisk (Muhurat trading session typically announced separately). Some listed dates fall on weekends (2026-02-15 Sun, 2026-03-21 Sat, 2026-08-15 Sat, 2026-11-08 Sun) — NSE publishes them regardless; harmless for the Mon-Fri trading-day check. FLAG for owner Jan re-verification (docs/10 §1): 2026-01-15 \"Municipal Corporation Election - Maharashtra\" is an atypical entry (NSE/BSE closures are usually tied to state Assembly/Lok Sabha polls, not municipal-tier elections) — re-confirm against the live NSE holiday-master endpoint before go-live.",
+    "DSP Nifty IT ETF: NSE's own quote page uses symbol ITETFADD, but Yahoo serves the security only as ITADD.NS — ingesters keyed on yahoo_symbol must use ITADD.NS; NSE-bhavcopy fallback should match by ISIN INF740KA1SX1."
+  ]
+}

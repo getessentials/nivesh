@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window"]
+  },
+  "imports": {
+    "zod": "npm:zod@^3.23.8",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.45.0",
+    "fflate": "npm:fflate@^0.8.3",
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.112.5",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@niveshetf/shared": "../../packages/shared/src/index.ts"
+  }
+}
