@@ -1,16 +1,20 @@
 /**
  * ingest-tri (docs/02 §3, docs/10 §2: nightly 23:00 IST, daily).
- * niftyindices' POST endpoints were verified ERRORING as of 2026-07-23 (Phase 0, re-confirmed
- * at build step 2 — `Backpage.aspx/getTotalReturnIndexString` returns a generic processing
- * error regardless of payload shape). The manual CSV upload path (Settings, an owner-admin
- * function) is the expected first-class path per docs/02 §3, not this ingester.
+ * The ORIGINAL contract coded here (`Backpage.aspx/getTotalReturnIndexString`, JSON-with-ISO-dates
+ * payload, `{d: "<csv>"}` response envelope) was simply wrong — not a niftyindices outage. Fixed
+ * 2026-07-24 against the real contract captured from a live browser network call (see
+ * `tryFetchNiftyindicesTri`'s own comment for the exact shape). Confirmed working via direct curl
+ * from a non-Supabase IP — but **Supabase Edge Functions' egress IPs are still blocked** (the same
+ * datacenter-IP filtering pattern documented for Yahoo in ingest-prices), so this still fails in
+ * production despite being contractually correct. The manual CSV upload path (Settings, an
+ * owner-admin function) remains the expected first-class path per docs/02 §3 until that changes.
  *
  * Design consequence (docs/10 §2, fixed in Phase 0 loop 2 for exactly this reason): the
  * monthly-run precondition checks index_tri DATA PRESENCE, never this job's `ok` flag — so
- * this function is allowed to honestly report ok=false when niftyindices is down and some
- * indices remain uncovered. It still attempts the fetch every night (in case NSE fixes the
- * endpoint) and always reports exactly which indices are covered vs still missing, so the
- * dashboard banner (docs/10 §6) can prompt the owner toward a manual upload.
+ * this function is allowed to honestly report ok=false when niftyindices is unreachable and some
+ * indices remain uncovered. It still attempts the fetch every night (in case the IP block lifts),
+ * and always reports exactly which indices are covered vs still missing, so the dashboard banner
+ * (docs/10 §6) can prompt the owner toward a manual upload.
  *
  * nav_proxy indices (gold/silver/ai_global_tech/debt_liquid, docs/03 §6) need no index_tri row
  * at all — the engine reads etf_navs of the pinned proxy ETF directly (docs/05 comment).
@@ -21,7 +25,7 @@ import { createServiceClient } from '../_shared/supabase-client.ts';
 import { runLoggedJob } from '../_shared/job-log.ts';
 import { fetchWithRetry } from '../_shared/http.ts';
 import { errorResponse } from '../_shared/http-error.ts';
-import { parseTriCsv, checkTimeSeriesRow, IndexTriRowSchema, type PreviousObservation } from '../_shared/shared-lib.ts';
+import { checkTimeSeriesRow, IndexTriRowSchema, isoDateToDDMonYYYY, parseFlexibleDate, type PreviousObservation } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function todayIstIso(): string {
@@ -54,11 +58,19 @@ async function indicesMissingToday(
 }
 
 /**
- * Best-effort niftyindices fetch for one index. VERIFY-AT-SEED: the exact working payload
- * contract (last confirmed working shape unknown; both a raw-JSON and a `cinfo`-wrapped POST
- * to `Backpage.aspx/getTotalReturnIndexString` returned a generic processing error as of
- * 2026-07-23). Returns null on any failure rather than throwing — a single index's failure
- * must not abort the other indices' attempts.
+ * Best-effort niftyindices fetch for one index. Confirmed working contract (2026-07-24, captured
+ * from the live browser network tab against `/reports/historical-data` — the previously-coded
+ * `Backpage.aspx/...` path and JSON-with-ISO-dates payload were both wrong, which is why every
+ * automated attempt failed since Phase 0):
+ *   - URL: `BackPage/getTotalReturnIndexString` (capital B/P, no `.aspx`)
+ *   - Body: `{"cinfo": "<single-quoted pseudo-JSON, NOT real JSON>"}`, e.g.
+ *     `{'name':'NIFTY 50','startDate':'24-Jul-2025','endDate':'24-Jul-2026','indexName':'NIFTY 50'}`
+ *     — dates as `DD-Mon-YYYY`, not ISO.
+ *   - Response: a plain JSON array of `{Date, "Index Name", NTR_Value, TotalReturnsIndex,
+ *     RequestNumber}` objects (Date as `DD Mon YYYY`, space-separated) — NOT the `{d: "<csv>"}`
+ *     ASP.NET-page-method envelope the old code expected, and not CSV text at all.
+ * Returns null on any failure rather than throwing — a single index's failure must not abort the
+ * other indices' attempts.
  */
 async function tryFetchNiftyindicesTri(
   indexName: string,
@@ -66,8 +78,8 @@ async function tryFetchNiftyindicesTri(
   toDate: string
 ): Promise<{ date: string; value: number }[] | null> {
   try {
-    const cinfo = JSON.stringify({ name: indexName, startDate: fromDate, endDate: toDate, indexName });
-    const res = await fetchWithRetry('https://www.niftyindices.com/Backpage.aspx/getTotalReturnIndexString', {
+    const cinfo = `{'name':'${indexName}','startDate':'${isoDateToDDMonYYYY(fromDate)}','endDate':'${isoDateToDDMonYYYY(toDate)}','indexName':'${indexName}'}`;
+    const res = await fetchWithRetry('https://www.niftyindices.com/BackPage/getTotalReturnIndexString', {
       maxAttempts: 2,
       method: 'POST',
       body: JSON.stringify({ cinfo }),
@@ -77,9 +89,18 @@ async function tryFetchNiftyindicesTri(
       },
     });
     if (!res.ok) return null;
-    const body = (await res.json()) as { d?: string };
-    if (!body.d) return null;
-    return parseTriCsv(body.d);
+    const body = (await res.json()) as unknown;
+    if (!Array.isArray(body)) return null;
+    const rows: { date: string; value: number }[] = [];
+    for (const row of body as Array<Record<string, unknown>>) {
+      const rawDate = row['Date'];
+      const rawValue = row['TotalReturnsIndex'];
+      if (typeof rawDate !== 'string' || (typeof rawValue !== 'string' && typeof rawValue !== 'number')) continue;
+      const value = Number(rawValue);
+      if (!Number.isFinite(value)) continue;
+      rows.push({ date: parseFlexibleDate(rawDate), value });
+    }
+    return rows;
   } catch {
     return null;
   }
@@ -130,7 +151,10 @@ Deno.serve(async (req) => {
 
       for (const indexName of missing) {
         const fetched = await tryFetchNiftyindicesTri(indexName, fiveDaysAgo, today);
-        const latestBar = fetched?.at(-1);
+        // The API returns rows newest-first; sort ascending so "last" reliably means "most
+        // recent" regardless of the response's own ordering.
+        const sorted = fetched ? [...fetched].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)) : undefined;
+        const latestBar = sorted?.at(-1);
         if (!latestBar) { stillMissing.push(indexName); continue; }
 
         const previous = latestByIndex.get(indexName);

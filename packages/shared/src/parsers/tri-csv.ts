@@ -17,7 +17,10 @@ export interface TriRow {
 }
 
 const DATE_HEADER_SYNONYMS = ['date', 'index date'];
-const VALUE_HEADER_SYNONYMS = ['close', 'closing value', 'index value', 'tri', 'total return index'];
+// 'total returns index' (plural) is the exact header niftyindices' own CSV export uses
+// (verified 2026-07-24 against a real downloaded file) — 'total return index' (singular) kept
+// too in case of drift, never remove either.
+const VALUE_HEADER_SYNONYMS = ['close', 'closing value', 'index value', 'tri', 'total return index', 'total returns index'];
 
 function splitCsvLine(line: string): string[] {
   // niftyindices exports are plain comma-separated with no embedded commas in date/numeric

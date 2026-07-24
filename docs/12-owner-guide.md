@@ -69,7 +69,7 @@ floating-point money math anywhere past the one rupee→paise conversion point.
 |---|---|---|
 | ETF prices | Yahoo Finance / NSE bhavcopy fallback | automatic, daily 18:30 IST |
 | ETF NAVs | AMFI bulk file / mfapi.in fallback | automatic, daily 22:30 IST |
-| Index TRI (benchmark) | niftyindices.com | **currently broken** (site unreachable) — manual CSV upload, Settings page |
+| Index TRI (benchmark) | niftyindices.com | **automated fetch is contractually correct but blocked** — Supabase's server IPs get filtered by niftyindices (same pattern as other sources blocking datacenter IPs), not a site outage. Manual CSV upload, Settings page |
 | AUM / TER / tracking error | no free API exists anywhere | **always manual** — Settings page form, monthly |
 | ADTV / premium-discount | computed from the two rows above | automatic, no action needed |
 
@@ -87,7 +87,7 @@ the URL with anyone else, even accidentally.
 | Task | How often | Deadline / when | Where | Notes |
 |---|---|---|---|---|
 | Fill AUM/TER/tracking-error form | Monthly, after the last Saturday of each month | Best done before the 1st trading day of the FOLLOWING month, 23:30 IST — that's when the next scheduled run reads it. Hard outer limit: within 45 days of being queued, or `stale_metrics` re-gates that ETF out even if you eventually fill it | Settings → "Metrics review queue" | `refresh-metrics` auto-queues every active ETF that Saturday 10:00 IST; the form only shows rows waiting on you |
-| Upload TRI CSV | As needed, while niftyindices stays unreachable | **Hard deadline: 12:00 IST the day AFTER that month's 1st trading day** — past this, `stage-research` fails the whole run outright with `ingest_missing`, no retry | Settings → "TRI CSV upload" | Export the historical-data CSV from niftyindices.com per index, upload one file per index. Stop doing this once `ingest-tri` starts succeeding again (check `job_runs`) |
+| Upload TRI CSV | As needed, while Supabase's IP stays blocked by niftyindices | **Hard deadline: 12:00 IST the day AFTER that month's 1st trading day** — past this, `stage-research` fails the whole run outright with `ingest_missing`, no retry | Settings → "TRI CSV upload" | niftyindices.com → Reports → Historical Data → switch the top dropdown to "Total returns Index Values" → Equity → Broad Market Indices (or the relevant sub-index) → pick the index → set a 1yr+ date range → Submit → download CSV. One file per index. Stop doing this once `ingest-tri` starts succeeding again (check `job_runs` — the fetch itself is correct now, just IP-blocked) |
 | Re-seed NSE trading holidays | Once a year, January | Before Jan 1 of the new year — the "1st trading day" calculation for January's run depends on it | Direct SQL / new migration (no UI yet) | `nse_holidays` table; docs/10 §1 |
 | Check dashboard banner / health-check email | Whenever, or rely on the daily 10:30 IST alert email | Same day as the alert, ideally — it's flagging something already broken | Dashboard screen | Flags any job failure or unresolved quarantine in the last 7 days |
 | Review `ingest_quarantine` | As it comes up | Within 3 trading days of the row appearing — past that, the affected ETF's price/NAV is stale enough to trip the OPS-1 staleness gate on its own | No UI yet (`admin-resolve-quarantine` not built) — direct SQL for now | Rows are ingested data that failed a sanity gate (value ≤0, future date, >20% single-day jump) |

@@ -46,10 +46,18 @@ Phase 0 data-verifier; items it could not confirm are marked `VERIFY-AT-SEED`.
   TRI (gold, silver, NASDAQ-100) use the flagged proxy series defined in docs/03 §6.
 - Source: niftyindices.com historical data endpoints (free, EOD) for Nifty 50 TRI, Nifty India
   Defence TRI, Nifty India Manufacturing TRI, Nifty Infrastructure TRI, Nifty CPSE TRI, Nifty IT
-  TRI, etc. **Status 2026-07-23: the site responds but the underlying POST endpoints
-  (`Backpage.aspx/...`) currently return errors to non-browser payloads — exact contract
-  `VERIFY-AT-SEED`.** Build the ingester tolerant of schema drift, cache aggressively, and treat
-  the **manual CSV upload path in Settings as an expected first-class path, not a last resort**.
+  TRI, etc. **Status 2026-07-24: real contract confirmed by capturing the live browser network
+  call** — `POST https://www.niftyindices.com/BackPage/getTotalReturnIndexString` (not
+  `Backpage.aspx/...`, the originally-coded path — that was simply wrong, not the site's own
+  fault), body `{"cinfo": "<single-quoted pseudo-JSON, dates as DD-Mon-YYYY>"}`, response a plain
+  JSON array of `{Date, TotalReturnsIndex, ...}` (not the ASP.NET `{d: "<csv>"}` envelope the
+  original code assumed). `ingest-tri` now implements this correctly and it works from a normal
+  IP — **but Supabase Edge Functions' egress IPs are still blocked** (same datacenter-IP
+  filtering pattern already documented for Yahoo in ingest-prices; presumably a Cloudflare
+  IP-reputation rule scoped to cloud/hosting ranges, not specifically Supabase). So the automated
+  path remains non-functional in production today despite being contractually correct — **the
+  manual CSV upload path in Settings stays the first-class path**, not a last resort, until/unless
+  that IP block lifts or ingestion gets routed through a non-flagged egress point.
 - Cadence: nightly (docs/10 §2).
 
 ## 4. ETF quality metrics — AUM, TER, tracking error, tracking difference
