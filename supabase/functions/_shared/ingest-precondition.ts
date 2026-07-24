@@ -4,6 +4,7 @@
  * job status (a job can log ok=true while the source served yesterday's file).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isTradingDay, previousTradingDay } from './shared-lib.ts';
 
 /**
  * "or >=90% of them; threshold pinned at seed" (docs/10 §2) — no seed table exists yet for this
@@ -71,4 +72,40 @@ export async function checkIngestPrecondition(supabase: SupabaseClient, runDate:
   if (missingTri.length > 0) missing.push(`index_tri missing for: ${missingTri.join(', ')}`);
 
   return { ready: missing.length === 0, missing };
+}
+
+const MAX_LOOKBACK_TRADING_DAYS = 10;
+
+export interface ResolveRunDateResult {
+  ready: boolean;
+  runDate?: string;
+  /** From the closest-to-today attempt that failed — the most actionable diagnostic (older
+   *  attempts failing the same way isn't news once the newest one already tells the story). */
+  missing: string[];
+}
+
+/**
+ * Any-day pricing (docs/03 header, CLAUDE.md): instead of insisting on a FIXED target date (this
+ * month's first trading day) and waiting/failing if that exact date's data hasn't landed yet,
+ * walk backward from today looking for the most recent trading day that already has full
+ * price/NAV/TRI coverage, and use THAT as the run's pricing date. Ingestion runs daily, so in
+ * steady state this resolves to today-or-yesterday on the first or second attempt; it only walks
+ * further back to paper over a transient gap (a skipped ingest run, a holiday miscount). Still a
+ * hard failure — not a wait-and-retry — if nothing in the lookback window is usable at all,
+ * since that signals a real ingestion problem, not merely "too early in the day."
+ */
+export async function resolveReadyRunDate(
+  supabase: SupabaseClient,
+  holidays: ReadonlySet<string>,
+  todayIso: string
+): Promise<ResolveRunDateResult> {
+  let candidate = isTradingDay(todayIso, holidays) ? todayIso : previousTradingDay(todayIso, holidays);
+  let lastMissing: string[] = [];
+  for (let i = 0; i < MAX_LOOKBACK_TRADING_DAYS; i++) {
+    const result = await checkIngestPrecondition(supabase, candidate);
+    if (result.ready) return { ready: true, runDate: candidate, missing: [] };
+    lastMissing = result.missing;
+    candidate = previousTradingDay(candidate, holidays);
+  }
+  return { ready: false, missing: lastMissing };
 }

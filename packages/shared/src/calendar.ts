@@ -58,6 +58,18 @@ export function firstTradingDayOfMonth(yyyyMM: string, holidays: ReadonlySet<str
   throw new Error(`no trading day found in ${yyyyMM} (check the holiday calendar)`);
 }
 
+/** The trading day strictly before `iso` (any-day pricing, docs/03 header — used to walk
+ *  backward from today looking for the most recent trading day with usable market data,
+ *  instead of insisting on a fixed calendar target date). */
+export function previousTradingDay(iso: string, holidays: ReadonlySet<string>): string {
+  let candidate = addDaysISO(iso, -1);
+  for (let i = 0; i < 31; i++) {
+    if (isTradingDay(candidate, holidays)) return candidate;
+    candidate = addDaysISO(candidate, -1);
+  }
+  throw new Error(`no trading day found before ${iso} within 31 days (check the holiday calendar)`);
+}
+
 /** Last Saturday of the given month (docs/10 §2 refresh-metrics cadence). */
 export function lastSaturdayOfMonth(yyyyMM: string): string {
   if (!/^\d{4}-\d{2}$/.test(yyyyMM)) throw new Error(`expected 'YYYY-MM', got: ${yyyyMM}`);

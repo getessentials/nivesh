@@ -42,28 +42,29 @@ own defaults — this migration doesn't touch those grants, it only restricts it
 **Monthly-run timing decision (resolves the OPS-5 contradiction):** the scheduled run fires at
 **23:30 IST on the first trading day — after prices (18:30), NAV (22:30), and TRI (23:00) have all
 landed** — not 19:00 as earlier drafts said (CLAUDE.md build-order step 6 updated to match).
-**Ingest precondition (before stage 1)** — data for the RUN DATE (the first-trading-day date,
-derived from the trading calendar — not "today", since waits cross midnight) must be present.
-ALL THREE legs are defined on **data presence, never job status** (a job can log `ok=true` while
-the source was late — e.g. AMFI still serving yesterday's NAVAll at 22:30; zero-new-rows is a
-job success, recovery is this re-check's job):
-- prices: run-date `etf_prices` rows exist for every active ETF (or ≥90% of them; threshold
-  pinned at seed);
-- NAV: run-date `etf_navs` rows likewise;
-- TRI: run-date (or latest-trading-date) `index_tri` rows exist for every benchmark index in
-  use, whatever their source (ingester **or manual upload** — while niftyindices is manual-first
-  per docs/02 §3, the scheduled run must still pass).
-If the precondition fails: the run enters a **wait, not a failed attempt** — the stage exits via
-a wait-exit (decrements the `stage_attempts` the CAS claim incremented and nulls
-`stage_started_at`, releasing the lease), sets `next_check_at = now() + 1h` (docs/05; cleared
-when the precondition passes). Each hourly re-check FIRST re-invokes (pg_net, cron secret) any
-ingester whose run-date **data rows** are missing — regardless of its job `ok` flag (all
-ingesters are idempotent) — then re-tests. Hard deadline: 12:00 IST on the day after the run
-date (derived, not stored); past it, `status='failed'`, `fail_reason='ingest_missing'`.
-Consequence: gate G6's plan-time premium check uses same-day price vs same-day NAV. A user-initiated
-"Run now" at any other time uses the latest available data and G6 compares the latest price with the
-latest NAV, each labeled with its as-of date (dates may differ by one trading day; the plan card
-shows both).
+**Ingest precondition / any-day pricing (before stage 1, changed 2026-07-24):** stage-research no
+longer targets a fixed calendar date (the month's first trading day) and waits for that exact
+date's data to arrive. Instead `resolveReadyRunDate` (supabase/functions/_shared/ingest-
+precondition.ts) walks backward from today across trading days (up to 10) looking for the most
+recent date where **prices, NAV, and TRI are ALL already present** — data presence, never job
+status (a job can log `ok=true` while the source was late; zero-new-rows is a job success, not
+proof of freshness). The first date satisfying all three becomes `monthly_runs.run_date`,
+persisted once at the pending→research transition so every later stage reads the SAME date
+instead of each independently recomputing it (a prior version had 5 stage functions each
+recompute `firstTradingDayOfMonth(run_month)` independently — harmless when they agreed, a latent
+bug waiting for the day they wouldn't). In steady state (daily ingestion keeping pace) this
+resolves to today-or-yesterday on the first or second lookback step. A user can now click "Run
+now" on ANY day and get a plan priced off the most recent real data — not just the 1st of the
+month. The scheduled cron trigger (fires 23:30 IST, days 1-10) still only *creates* a fresh run
+once a month automatically — any-day pricing is about which DATE'S DATA a run uses, not how often
+runs happen; the monthly cadence itself is unchanged.
+If NOTHING in the 10-trading-day lookback has full coverage: immediate hard failure,
+`status='failed'`, `fail_reason='ingest_missing'` — no wait/retry, since a 10-day gap signals a
+real ingestion problem (e.g. cron never got set up), not "too early in the day." This replaces
+the old fixed-deadline logic (wait an hour, re-nudge ingesters, give up at 12:00 IST the day
+after the target date) entirely — there is no more "target date" to wait for.
+Consequence: gate G6's plan-time premium check uses `run_date` price vs `run_date` NAV — always
+the same date for both, by construction, since the resolver only accepts a date where both exist.
 
 ## 3. Pipeline driver (resolves "who advances the chain")
 `monthly_runs` state machine:
@@ -87,8 +88,9 @@ shows both).
 - **run-driver** (cron, every 10 min): picks runs not in `done|failed|superseded` where the lease
   test above passes (the `coalesce` covers a stage that crashed before its first completion —
   `stage_updated_at` may still be NULL) and, for waiting runs, `now() >= next_check_at`;
-  re-invokes the current stage. **Max 3 attempts per stage** (ingest-precondition waits do NOT
-  count — §2), then `status='failed'` with the last error as `fail_reason`.
+  re-invokes the current stage. **Max 3 attempts per stage**, then `status='failed'` with the
+  last error as `fail_reason`. (Pre-2026-07-24 this excepted ingest-precondition waits from the
+  attempt count — that whole wait/retry mechanism no longer exists, §2.)
 - Stages may also chain directly (stage k fires stage k+1 on success) for latency; the driver is
   the correctness backstop.
 - Idempotency: every stage can be re-run from its checkpoint without duplicating rows (schema

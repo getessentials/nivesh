@@ -15,19 +15,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChargeOverridesCard } from '@/components/settings/ChargeOverridesCard';
+import { isAdminUser } from '@/lib/admin';
 import type { RiskAppetite } from '@niveshetf/engine';
-
-/**
- * Owner-admin visibility is a client-side UX hint ONLY (docs/09 §2.1's ADMIN_USER_IDS allowlist
- * is enforced server-side, in the Edge Functions themselves — this env var never grants access,
- * it just avoids showing admin controls to an obviously non-admin session).
- */
-const ADMIN_USER_IDS = (import.meta.env.VITE_ADMIN_USER_IDS as string | undefined)?.split(',').filter(Boolean) ?? [];
 
 export default function SettingsPage() {
   const { session } = useAuth();
   const userId = session!.user.id;
-  const isAdmin = ADMIN_USER_IDS.includes(userId);
+  const isAdmin = isAdminUser(userId);
 
   const { data: profile, isLoading: profileLoading } = useGetProfileQuery(userId);
   const [upsertProfile, { isLoading: saving }] = useUpsertProfileMutation();

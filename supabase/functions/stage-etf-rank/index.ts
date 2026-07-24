@@ -15,7 +15,6 @@ import { loadLatestMetrics, type LatestMetricsRow } from '../_shared/etf-metrics
 import { scoreEtfs, etfScoreFinal, type EtfCandidateInput } from '../_shared/etf-scoring.ts';
 import { loadEtfFeedback } from '../_shared/etf-feedback-repo.ts';
 import { incumbentWinsStickiness, MIN_ETF_COHORT_SIZE, type FeedbackStatus, type SeriesPoint } from '../_shared/engine-lib.ts';
-import { firstTradingDayOfMonth } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -24,10 +23,10 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 const MAX_RANKED_PER_THEME = 5;
 
-interface RunRow { user_id: string; run_month: string }
+interface RunRow { user_id: string; run_month: string; run_date: string }
 
 async function loadRun(supabase: SupabaseClient, runId: string): Promise<RunRow> {
-  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month').eq('id', runId).single();
+  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month, run_date').eq('id', runId).single();
   if (error) throw new Error(`failed to load run ${runId}: ${error.message}`);
   return data as RunRow;
 }
@@ -112,7 +111,7 @@ Deno.serve(async (req) => {
     try {
       const run = await loadRun(supabase, runId);
       const holidays = await loadHolidays(supabase);
-      const runDate = firstTradingDayOfMonth(run.run_month.slice(0, 7), holidays);
+      const runDate = run.run_date;
 
       const satelliteThemes = await loadSelectedSatelliteThemes(supabase, runId);
       const { nonEquityTheme } = await loadProfileSleeveConfig(supabase, run.user_id);

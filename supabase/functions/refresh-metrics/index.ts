@@ -94,7 +94,12 @@ Deno.serve(async (req) => {
     const today = todayIstIso();
     const yyyyMM = today.slice(0, 7);
 
-    if (today !== lastSaturdayOfMonth(yyyyMM)) {
+    // `force: true` bypasses the day-gate — cron-secret-only (never exposed to the browser/admin
+    // UI, so no new user-facing surface), for manually testing this month's cycle without waiting
+    // for the actual last Saturday. The real schedule stays unchanged; this is a one-off escape
+    // hatch invoked directly with the cron secret, same trust boundary as the schedule itself.
+    const payload = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+    if (payload.force !== true && today !== lastSaturdayOfMonth(yyyyMM)) {
       return new Response(JSON.stringify({ ok: true, rows: 0, note: 'no-op: not the last Saturday of the month' }), {
         status: 200,
         headers: { 'content-type': 'application/json' },

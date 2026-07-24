@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useGetIndicesQuery } from '@/store/api';
+import { useGetIndicesQuery, api } from '@/store/api';
+import { useAppDispatch } from '@/store/hooks';
 import { invokeFunction } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HelpStepsDialog } from '@/components/HelpStepsDialog';
+import { TRI_UPLOAD_STEPS } from '@/lib/manualStepsHelp';
 
 /** Owner-admin manual TRI CSV upload (docs/02 §3) — the first-class path while niftyindices'
  *  endpoints are unreachable. One file = one index's history; server re-validates schema and the
@@ -12,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export function TriUploadCard() {
   const { data: indices } = useGetIndicesQuery();
   const triIndices = (indices ?? []).filter((i) => i.tri_source === 'niftyindices');
+  const dispatch = useAppDispatch();
 
   const [indexName, setIndexName] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
@@ -39,6 +43,7 @@ export function TriUploadCard() {
         toast.success(`${result.rowsWritten} row(s) written for ${indexName} (${result.dateRange?.from} → ${result.dateRange?.to}).`);
         setCsvText(null);
         setFileName(null);
+        dispatch(api.util.invalidateTags(['IndexTri']));
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'admin-upload-tri request failed.');
@@ -50,7 +55,10 @@ export function TriUploadCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>TRI CSV upload</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          TRI CSV upload
+          <HelpStepsDialog title="How to get a TRI CSV" steps={TRI_UPLOAD_STEPS} />
+        </CardTitle>
         <CardDescription>
           niftyindices' automated feed is currently unreachable — upload a historical-data CSV
           exported from niftyindices.com for one index at a time. Max 1MB, 5,000 rows, UTF-8.

@@ -6,12 +6,16 @@
 import { verifyCronSecret } from '../_shared/auth.ts';
 import { createServiceClient } from '../_shared/supabase-client.ts';
 import { errorResponse, HttpError } from '../_shared/http-error.ts';
-import { claimStage, completeStage, recordStageFailure, failRun, waitStage, chainStage } from '../_shared/pipeline.ts';
-import { checkIngestPrecondition } from '../_shared/ingest-precondition.ts';
+import { claimStage, completeStage, recordStageFailure, failRun, chainStage } from '../_shared/pipeline.ts';
+import { resolveReadyRunDate } from '../_shared/ingest-precondition.ts';
 import { anthropicClient, isSpendCapped, accrueLlmCost, RESEARCH_MODEL } from '../_shared/llm.ts';
 import { researchThemeCandidates } from '../_shared/theme-research-llm.ts';
-import { firstTradingDayOfMonth, ingestDeadlineUtc } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+function todayIstIso(): string {
+  const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
+  return ist.toISOString().slice(0, 10);
+}
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -113,30 +117,24 @@ Deno.serve(async (req) => {
     try {
       const run = await loadRun(supabase, runId);
       const holidays = await loadHolidays(supabase);
-      const runDate = firstTradingDayOfMonth(run.run_month.slice(0, 7), holidays);
 
-      const precondition = await checkIngestPrecondition(supabase, runDate);
-      if (!precondition.ready) {
-        const deadline = ingestDeadlineUtc(runDate);
-        if (Date.now() >= deadline.getTime()) {
-          await failRun(supabase, runId, 'ingest_missing');
-          return jsonResponse({ ok: false, failed: true, reason: 'ingest_missing', missing: precondition.missing });
-        }
-        // Nudge the ingesters that are missing today's data before waiting an hour (docs/10 §2)
-        // — idempotent, best-effort; failures here don't block the wait-exit itself.
-        await Promise.all([
-          precondition.missing.some((m) => m.startsWith('etf_prices')) ? chainStage('ingest-prices', {}) : Promise.resolve(),
-          precondition.missing.some((m) => m.startsWith('etf_navs')) ? chainStage('ingest-nav', {}) : Promise.resolve(),
-          precondition.missing.some((m) => m.startsWith('index_tri')) ? chainStage('ingest-tri', {}) : Promise.resolve(),
-        ]);
-        await waitStage(supabase, runId, new Date(Date.now() + 3600_000).toISOString());
-        return jsonResponse({ ok: true, waiting: true, missing: precondition.missing });
+      // Any-day pricing (docs/03 header): look backward for the most recent trading day that
+      // already has full price/NAV/TRI coverage, rather than insisting on a fixed target date
+      // and waiting for it — ingestion is daily, so this resolves to today-or-yesterday in
+      // steady state and only walks further back to paper over a transient gap. A genuine
+      // failure here (nothing usable in the lookback window) means a real ingestion problem,
+      // not "too early in the day" — no wait/retry, fail immediately.
+      const resolved = await resolveReadyRunDate(supabase, holidays, todayIstIso());
+      if (!resolved.ready) {
+        await failRun(supabase, runId, 'ingest_missing');
+        return jsonResponse({ ok: false, failed: true, reason: 'ingest_missing', missing: resolved.missing });
       }
+      const runDate = resolved.runDate!;
 
       await loadOrCreateThemeResearch(supabase, runId, run.run_month);
-      await completeStage(supabase, runId, 'research', { research_month: run.run_month });
+      await completeStage(supabase, runId, 'research', { research_month: run.run_month, run_date: runDate });
       await chainStage('stage-gate', { runId });
-      return jsonResponse({ ok: true, runId, status: 'research' });
+      return jsonResponse({ ok: true, runId, status: 'research', runDate });
     } catch (err) {
       await recordStageFailure(supabase, runId, err);
       return jsonResponse({ ok: false, error: err instanceof Error ? err.message : String(err) }, 500);

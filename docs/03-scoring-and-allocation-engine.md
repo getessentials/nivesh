@@ -6,6 +6,13 @@ function unit-tested. The LLM never touches anything in this file's scope.
 docs/08-computation-conventions.md.** Floats are allowed in scoring/weights; every ₹ figure
 crosses to integer paise exactly once (docs/08 §5); unit/tax math is integer-only after that.
 
+**Any-day pricing (2026-07-24):** every date this file refers to as "the run date" is resolved by
+`resolveReadyRunDate` (docs/10 §2) as the most recent trading day with full price/NAV/TRI
+coverage — NOT a fixed "first trading day of the month" target. This lets a plan run on any day,
+priced off the freshest available data, while the scheduled cron trigger still only creates a
+fresh run once a month automatically (docs/10 §2). Nothing else in this file's formulas changes;
+`runDate` is just an input, computed differently upstream.
+
 ## 1. Profile mapping
 ```
 equity_pct(age, risk) = clamp(115 - age + riskAdj, 40, 90)   // riskAdj: cons -10, mod 0, aggr +10

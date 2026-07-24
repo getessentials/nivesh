@@ -1,10 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { firstTradingDayOfMonth } from '@niveshetf/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { usePortfolioValuation } from '@/hooks/usePortfolioValuation';
-import { useGetLatestMonthlyRunQuery, useGetNseHolidaysQuery, useGetRecentJobRunsQuery, useGetIngestQuarantineQuery } from '@/store/api';
+import {
+  useGetLatestMonthlyRunQuery, useGetNseHolidaysQuery, useGetRecentJobRunsQuery, useGetIngestQuarantineQuery,
+  useGetIndicesQuery, useGetIndexTriCoveredNamesQuery, useGetMetricsReviewQueueQuery, useGetEtfsQuery,
+} from '@/store/api';
 import { formatPaise } from '@/lib/money';
+import { isAdminUser } from '@/lib/admin';
+import { HelpStepsDialog } from '@/components/HelpStepsDialog';
+import { TRI_UPLOAD_STEPS, METRICS_FORM_STEPS } from '@/lib/manualStepsHelp';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Disclaimer } from '@/components/Disclaimer';
 import { failReasonLabel } from '@/lib/failReasons';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, X } from 'lucide-react';
 
 function nextRunDateLabel(holidays: Set<string> | undefined): string {
   if (!holidays) return '—';
@@ -29,11 +35,16 @@ function nextRunDateLabel(holidays: Set<string> | undefined): string {
 export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session!.user.id;
+  const isAdmin = isAdminUser(userId);
 
   const { data: latestRun, isLoading: runLoading } = useGetLatestMonthlyRunQuery(userId);
   const { data: holidayRows } = useGetNseHolidaysQuery();
   const { data: jobRuns } = useGetRecentJobRunsQuery(20);
   const { data: quarantine } = useGetIngestQuarantineQuery();
+  const { data: indices } = useGetIndicesQuery();
+  const { data: triCoveredNames } = useGetIndexTriCoveredNamesQuery(undefined, { skip: !isAdmin });
+  const { data: metricsQueue } = useGetMetricsReviewQueueQuery(undefined, { skip: !isAdmin });
+  const { data: allEtfs } = useGetEtfsQuery(undefined, { skip: !isAdmin });
   const valuation = usePortfolioValuation();
 
   const holidaySet = useMemo(() => (holidayRows ? new Set(holidayRows.map((r) => r.d)) : undefined), [holidayRows]);
@@ -41,6 +52,14 @@ export default function DashboardPage() {
 
   const recentFailedJobs = (jobRuns ?? []).filter((j) => j.ok === false);
   const unresolvedQuarantineCount = quarantine?.length ?? 0;
+
+  const triBackedIndexNames = (indices ?? []).filter((i) => i.tri_source === 'niftyindices').map((i) => i.name);
+  const coveredSet = new Set(triCoveredNames ?? []);
+  const missingTriNames = triBackedIndexNames.filter((n) => !coveredSet.has(n));
+  const etfNameById = new Map((allEtfs ?? []).map((e) => [e.id, e.name]));
+  const metricsQueueEtfNames = [...new Set((metricsQueue ?? []).map((r) => etfNameById.get(r.etf_id) ?? `etf_id ${r.etf_id}`))];
+  const [manualStepBannerDismissed, setManualStepBannerDismissed] = useState(false);
+  const showManualStepBanner = isAdmin && !manualStepBannerDismissed && (missingTriNames.length > 0 || metricsQueueEtfNames.length > 0);
 
   return (
     <div className="space-y-6">
@@ -57,6 +76,40 @@ export default function DashboardPage() {
             {recentFailedJobs.length > 0 && <div>{recentFailedJobs.length} recent ingestion job(s) failed.</div>}
             {unresolvedQuarantineCount > 0 && <div>{unresolvedQuarantineCount} row(s) quarantined pending review.</div>}
           </AlertDescription>
+        </Alert>
+      )}
+
+      {showManualStepBanner && (
+        <Alert variant="warning" className="pr-10">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Manual step needed before a plan can run.</AlertTitle>
+          <AlertDescription>
+            <div className="space-y-1">
+              {missingTriNames.length > 0 && (
+                <div className="flex items-start gap-1.5">
+                  <span>No TRI data yet for: {missingTriNames.join(', ')}.</span>
+                  <HelpStepsDialog title="How to get a TRI CSV" steps={TRI_UPLOAD_STEPS} />
+                </div>
+              )}
+              {metricsQueueEtfNames.length > 0 && (
+                <div className="flex items-start gap-1.5">
+                  <span>AUM/TER/tracking-error waiting on: {metricsQueueEtfNames.join(', ')}.</span>
+                  <HelpStepsDialog title="How to fill in AUM/TER/tracking-error" steps={METRICS_FORM_STEPS} />
+                </div>
+              )}
+              <Button asChild variant="link" className="h-auto p-0 text-amber-900 dark:text-amber-200">
+                <Link to="/settings">Go to Settings <ArrowRight className="size-3 ml-1" /></Link>
+              </Button>
+            </div>
+          </AlertDescription>
+          <button
+            type="button"
+            onClick={() => setManualStepBannerDismissed(true)}
+            aria-label="Dismiss"
+            className="absolute top-3 right-3 text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200"
+          >
+            <X className="size-4" />
+          </button>
         </Alert>
       )}
 

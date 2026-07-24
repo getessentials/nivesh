@@ -11,7 +11,6 @@ import { errorResponse, HttpError } from '../_shared/http-error.ts';
 import { claimStage, completeStage, recordStageFailure, chainStage } from '../_shared/pipeline.ts';
 import { loadEtfsForTheme, loadLatestMetrics, loadPlanDayPremiumPct, type EtfRow, type LatestMetricsRow } from '../_shared/etf-metrics-repo.ts';
 import { evaluateGates } from '../_shared/engine-lib.ts';
-import { firstTradingDayOfMonth } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -72,14 +71,9 @@ Deno.serve(async (req) => {
     if (!claimed) return jsonResponse({ ok: true, note: 'lease not acquired or run not at research' });
 
     try {
-      const { data: runRow, error: runErr } = await supabase.from('monthly_runs').select('run_month').eq('id', runId).single();
+      const { data: runRow, error: runErr } = await supabase.from('monthly_runs').select('run_date').eq('id', runId).single();
       if (runErr) throw new Error(`failed to load run ${runId}: ${runErr.message}`);
-      const runMonth = (runRow as { run_month: string }).run_month;
-
-      const { data: holidayRows, error: holidayErr } = await supabase.from('nse_holidays').select('d');
-      if (holidayErr) throw new Error(`failed to load nse_holidays: ${holidayErr.message}`);
-      const holidays = new Set((holidayRows as Array<{ d: string }>).map((r) => r.d));
-      const runDate = firstTradingDayOfMonth(runMonth.slice(0, 7), holidays);
+      const runDate = (runRow as { run_date: string }).run_date;
 
       const { etfs, metrics } = await loadAllActiveEtfsWithMetrics(supabase, runDate);
       const teCohorts = buildTePeerCohorts(etfs, metrics);

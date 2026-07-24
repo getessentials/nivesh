@@ -14,6 +14,7 @@
 import { verifyAdminJwt } from '../_shared/auth.ts';
 import { createServiceClient } from '../_shared/supabase-client.ts';
 import { errorResponse, HttpError } from '../_shared/http-error.ts';
+import { handlePreflight, withCors } from '../_shared/cors.ts';
 import { anthropicClient, isSpendCapped, RESEARCH_MODEL } from '../_shared/llm.ts';
 import { researchThemeCandidates } from '../_shared/theme-research-llm.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -34,6 +35,9 @@ async function loadInvestableThemeKeys(supabase: SupabaseClient): Promise<string
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   try {
     await verifyAdminJwt(req);
     const supabase = createServiceClient();
@@ -66,8 +70,8 @@ Deno.serve(async (req) => {
       );
     if (upsertErr) throw new Error(`failed to upsert theme_research for ${researchMonth}: ${upsertErr.message}`);
 
-    return jsonResponse({ ok: true, researchMonth, candidateCount: result.candidates.length, costUsd: result.costUsd });
+    return withCors(jsonResponse({ ok: true, researchMonth, candidateCount: result.candidates.length, costUsd: result.costUsd }));
   } catch (err) {
-    return errorResponse(err);
+    return withCors(errorResponse(err));
   }
 });

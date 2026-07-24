@@ -12,17 +12,16 @@ import { claimStage, completeStage, recordStageFailure, chainStage } from '../_s
 import { computeAndPersistFeedback } from '../_shared/feedback-engine.ts';
 import { scoreThemes, type ThemeCandidateInput } from '../_shared/theme-scoring.ts';
 import { themeScoreFinal, themeCountRange, type RiskAppetite } from '../_shared/engine-lib.ts';
-import { firstTradingDayOfMonth } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
 
-interface RunRow { user_id: string; run_month: string }
+interface RunRow { user_id: string; run_month: string; run_date: string }
 
 async function loadRun(supabase: SupabaseClient, runId: string): Promise<RunRow> {
-  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month').eq('id', runId).single();
+  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month, run_date').eq('id', runId).single();
   if (error) throw new Error(`failed to load run ${runId}: ${error.message}`);
   return data as RunRow;
 }
@@ -120,7 +119,7 @@ Deno.serve(async (req) => {
     try {
       const run = await loadRun(supabase, runId);
       const holidays = await loadHolidays(supabase);
-      const runDate = firstTradingDayOfMonth(run.run_month.slice(0, 7), holidays);
+      const runDate = run.run_date;
       const risk = await loadRiskAppetite(supabase, run.user_id);
 
       // docs/03 §2.3: the scoring cohort is FIXED — every investable theme excluding broad_core —

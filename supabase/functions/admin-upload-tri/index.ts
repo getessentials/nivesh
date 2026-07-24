@@ -13,6 +13,7 @@
 import { verifyAdminJwt } from '../_shared/auth.ts';
 import { createServiceClient } from '../_shared/supabase-client.ts';
 import { errorResponse, HttpError } from '../_shared/http-error.ts';
+import { handlePreflight, withCors } from '../_shared/cors.ts';
 import {
   parseTriCsv, checkTimeSeriesRow, IndexTriRowSchema, type PreviousObservation,
 } from '@niveshetf/shared';
@@ -45,6 +46,9 @@ async function loadPriorObservation(supabase: SupabaseClient, indexName: string,
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   try {
     await verifyAdminJwt(req);
     const supabase = createServiceClient();
@@ -97,13 +101,13 @@ Deno.serve(async (req) => {
     const { error: upsertErr } = await supabase.from('index_tri').upsert(validatedRows, { onConflict: 'index_name,d' });
     if (upsertErr) throw new Error(`failed to upsert index_tri: ${upsertErr.message}`);
 
-    return jsonResponse({
+    return withCors(jsonResponse({
       ok: true,
       indexName,
       rowsWritten: validatedRows.length,
       dateRange: { from: sorted[0]!.date, to: sorted[sorted.length - 1]!.date },
-    });
+    }));
   } catch (err) {
-    return errorResponse(err);
+    return withCors(errorResponse(err));
   }
 });

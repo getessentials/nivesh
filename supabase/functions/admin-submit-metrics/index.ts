@@ -19,6 +19,7 @@
 import { verifyAdminJwt } from '../_shared/auth.ts';
 import { createServiceClient } from '../_shared/supabase-client.ts';
 import { errorResponse, HttpError } from '../_shared/http-error.ts';
+import { handlePreflight, withCors } from '../_shared/cors.ts';
 import { EtfMetricsManualSchema, type EtfMetricsManual } from '@niveshetf/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -42,6 +43,9 @@ async function loadUnresolvedQueueKeys(
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   try {
     await verifyAdminJwt(req);
     const supabase = createServiceClient();
@@ -99,8 +103,8 @@ Deno.serve(async (req) => {
       if (queueErr) throw new Error(`failed to resolve metrics_review_queue for etf_id=${s.etf_id},as_of=${s.as_of}: ${queueErr.message}`);
     }
 
-    return jsonResponse({ ok: true, resolved: submissions.length });
+    return withCors(jsonResponse({ ok: true, resolved: submissions.length }));
   } catch (err) {
-    return errorResponse(err);
+    return withCors(errorResponse(err));
   }
 });

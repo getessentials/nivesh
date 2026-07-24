@@ -20,25 +20,18 @@ import {
   equityPct, coreSharePct, splitSleeves, boundedSoftmax, allocPaiseForWeight, remainderPass,
   oneperIndexDedup, withinThemeSplitPostDedup, type RiskAppetite, type IndexedPick, type ThemedPick, type RemainderPick,
 } from '../_shared/engine-lib.ts';
-import { firstTradingDayOfMonth } from '../_shared/shared-lib.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
 
-interface RunRow { user_id: string; run_month: string; amount_paise: string; carry_in_paise: string }
+interface RunRow { user_id: string; run_month: string; run_date: string; amount_paise: string; carry_in_paise: string }
 
 async function loadRun(supabase: SupabaseClient, runId: string): Promise<RunRow> {
-  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month, amount_paise, carry_in_paise').eq('id', runId).single();
+  const { data, error } = await supabase.from('monthly_runs').select('user_id, run_month, run_date, amount_paise, carry_in_paise').eq('id', runId).single();
   if (error) throw new Error(`failed to load run ${runId}: ${error.message}`);
   return data as RunRow;
-}
-
-async function loadHolidays(supabase: SupabaseClient): Promise<Set<string>> {
-  const { data, error } = await supabase.from('nse_holidays').select('d');
-  if (error) throw new Error(`failed to load nse_holidays: ${error.message}`);
-  return new Set((data as Array<{ d: string }>).map((r) => r.d));
 }
 
 interface ProfileRow { dob: string; risk: RiskAppetite; non_equity_sleeve: 'gold' | 'debt' }
@@ -98,8 +91,7 @@ Deno.serve(async (req) => {
 
     try {
       const run = await loadRun(supabase, runId);
-      const holidays = await loadHolidays(supabase);
-      const runDate = firstTradingDayOfMonth(run.run_month.slice(0, 7), holidays);
+      const runDate = run.run_date;
       const profile = await loadProfile(supabase, run.user_id);
 
       const age = ageAt(profile.dob, runDate);

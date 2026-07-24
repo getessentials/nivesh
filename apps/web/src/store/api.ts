@@ -31,7 +31,7 @@ export const api = createApi({
   tagTypes: [
     'Profile', 'FyExemptionInput', 'UserChargesOverride', 'Transaction', 'Holding', 'MonthlyRun',
     'RunAcknowledgement', 'RecommendationItem', 'FeedbackScore', 'JobRun', 'MetricsReviewQueue',
-    'IngestQuarantine',
+    'IngestQuarantine', 'IndexTri',
   ],
   endpoints: (builder) => ({
     // ---- Profile ----
@@ -189,6 +189,21 @@ export const api = createApi({
       queryFn: async ({ indexName, since }) =>
         unwrap<IndexTriRow[]>(await supabase.from('index_tri').select('*').eq('index_name', indexName).gte('d', since).order('d')),
     }),
+    // Which niftyindices-sourced index names have ANY index_tri row at all — cheap presence
+    // check for the Dashboard "manual step needed" banner, not the authoritative gate (that's
+    // server-side, docs/10 §4). Two prior client-side-limit versions of this both broke in
+    // production: PostgREST's project-level max-rows setting silently caps the response
+    // regardless of any client `.limit()` value, so fetching raw rows and deduping client-side
+    // is fundamentally unsound here, not just a tuning problem. Fixed by aggregating DISTINCT
+    // server-side instead (migration 20260724000002) — returns only the ~9-20 distinct names
+    // that will ever exist, immune to total row count.
+    getIndexTriCoveredNames: builder.query<string[], void>({
+      queryFn: async () => {
+        const result = unwrap<string[]>(await supabase.rpc('distinct_index_tri_names'));
+        return result;
+      },
+      providesTags: ['IndexTri'],
+    }),
     // NOTE: returns ALL matching rows ordered by as_of desc, not one-per-etf_id — same "most
     // recent row per group" gap as etf_prices (see usePortfolioValuation.ts's useLatestPrices);
     // no current caller, so dedupe client-side by etf_id (keeping the first row seen) before use.
@@ -222,6 +237,6 @@ export const {
   useGetFeedbackScoresQuery,
   useGetThemeResearchQuery,
   useGetRecentJobRunsQuery,
-  useGetEtfPricesQuery, useGetEtfNavsQuery, useGetIndexTriQuery, useGetLatestEtfMetricsQuery,
+  useGetEtfPricesQuery, useGetEtfNavsQuery, useGetIndexTriQuery, useGetIndexTriCoveredNamesQuery, useGetLatestEtfMetricsQuery,
   useGetMetricsReviewQueueQuery, useGetIngestQuarantineQuery,
 } = api;

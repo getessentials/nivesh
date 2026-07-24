@@ -30,7 +30,11 @@ Edge Functions, never the browser.
 
 ## 3. How a monthly plan actually gets built (the 7-stage pipeline)
 
-Triggered automatically on the month's first trading day (23:30 IST), or manually via "Run now."
+Triggered automatically on the month's first trading day (23:30 IST) — that's when a fresh run
+gets CREATED once a month — or manually via "Run now" any day. Either way, the plan is priced off
+the most recent trading day with full data available (any-day pricing, 2026-07-24) — clicking
+"Run now" on the 15th uses the 15th's (or latest available) prices, not a stale 1st-of-month
+snapshot.
 Each stage is a separate Edge Function invocation — they chain to each other directly for speed,
 with `run-driver` (every 10 min) as the backstop that retries/advances anything stuck.
 
@@ -87,11 +91,11 @@ the URL with anyone else, even accidentally.
 | Task | How often | Deadline / when | Where | Notes |
 |---|---|---|---|---|
 | Fill AUM/TER/tracking-error form | Monthly, after the last Saturday of each month | Best done before the 1st trading day of the FOLLOWING month, 23:30 IST — that's when the next scheduled run reads it. Hard outer limit: within 45 days of being queued, or `stale_metrics` re-gates that ETF out even if you eventually fill it | Settings → "Metrics review queue" | `refresh-metrics` auto-queues every active ETF that Saturday 10:00 IST; the form only shows rows waiting on you |
-| Upload TRI CSV | As needed, while Supabase's IP stays blocked by niftyindices | **Hard deadline: 12:00 IST the day AFTER that month's 1st trading day** — past this, `stage-research` fails the whole run outright with `ingest_missing`, no retry | Settings → "TRI CSV upload" | niftyindices.com → Reports → Historical Data → switch the top dropdown to "Total returns Index Values" → Equity → Broad Market Indices (or the relevant sub-index) → pick the index → set a 1yr+ date range → Submit → download CSV. One file per index. Stop doing this once `ingest-tri` starts succeeding again (check `job_runs` — the fetch itself is correct now, just IP-blocked) |
+| Upload TRI CSV | As needed, while Supabase's IP stays blocked by niftyindices | No fixed deadline anymore (any-day pricing, 2026-07-24) — but a run only looks back 10 trading days for usable data, so if TRI goes more than ~2 weeks stale, a run will fail `ingest_missing`. Keep it reasonably current | Settings → "TRI CSV upload" | niftyindices.com → Reports → Historical Data → switch the top dropdown to "Total returns Index Values" → Equity → Broad Market Indices (or the relevant sub-index) → pick the index → set a 1yr+ date range → Submit → download CSV. One file per index. Stop doing this once `ingest-tri` starts succeeding again (check `job_runs` — the fetch itself is correct now, just IP-blocked) |
 | Re-seed NSE trading holidays | Once a year, January | Before Jan 1 of the new year — the "1st trading day" calculation for January's run depends on it | Direct SQL / new migration (no UI yet) | `nse_holidays` table; docs/10 §1 |
 | Check dashboard banner / health-check email | Whenever, or rely on the daily 10:30 IST alert email | Same day as the alert, ideally — it's flagging something already broken | Dashboard screen | Flags any job failure or unresolved quarantine in the last 7 days |
 | Review `ingest_quarantine` | As it comes up | Within 3 trading days of the row appearing — past that, the affected ETF's price/NAV is stale enough to trip the OPS-1 staleness gate on its own | No UI yet (`admin-resolve-quarantine` not built) — direct SQL for now | Rows are ingested data that failed a sanity gate (value ≤0, future date, >20% single-day jump) |
-| Click "Run now" or wait for auto-run | Monthly | No deadline — auto-fires the 1st trading day 23:30 IST if data's ready; "Run now" works any time after that | Monthly Plan page | Cron also retries days 2–10 in case the 1st was a holiday cluster |
+| Click "Run now" or wait for auto-run | Monthly (auto), or any day (manual) | No deadline — auto-fires the 1st trading day 23:30 IST if data's ready; "Run now" works any day, any time, priced off the freshest available data (any-day pricing, 2026-07-24) | Monthly Plan page | Cron also retries days 2–10 in case the 1st was a holiday cluster |
 | Log real buys/sells | As you actually trade | No system deadline, but do it same-day/soon — the tax engine and "stick with winners" feedback loop only see what you've logged, not your real broker state | Portfolio page (manual entry or CSV import) | The app never sees your real holdings otherwise |
 
 ## 8. First-time walkthrough (what you do right now)

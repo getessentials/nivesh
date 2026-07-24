@@ -91,8 +91,10 @@ export async function recordStageFailure(supabase: SupabaseClient, runId: string
 }
 
 /** Terminal failure (docs/10 §3/§2): status='failed', lease cleared. Used both by the run-driver
- *  (max attempts exhausted) and by a stage's own ingest-precondition deadline check (docs/10 §2:
- *  past 12:00 IST the day after the run date -> `fail_reason='ingest_missing'`). */
+ *  (max attempts exhausted) and by stage-research's own resolveReadyRunDate check (docs/03
+ *  header, any-day pricing: no usable market data found within the lookback window ->
+ *  `fail_reason='ingest_missing'`, immediately — not a wait/retry, since a lookback miss means a
+ *  real ingestion gap, not "too early in the day"). */
 export async function failRun(supabase: SupabaseClient, runId: string, reason: string): Promise<void> {
   const { error } = await supabase
     .from('monthly_runs')
